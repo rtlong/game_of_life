@@ -1,4 +1,5 @@
 require 'matrix'
+require 'set'
 
 class Universe < Hash
   alias each each_value
@@ -30,25 +31,27 @@ class Evolution
   def initialize(universe)
     @universe = universe
     @new_universe = Universe.new
-    @keys_to_check = @universe.keys
-    @checked = []
+    @keys_to_check = Set.new @universe.keys
+    @checked = Set.new
   end
 
-  def keys_to_check
+  def keys
     @keys_to_check - @checked
   end
 
   def perform
-    while keys_to_check.any?
-      keys_to_check.each do |loc|
+    while keys.any?
+      keys.each do |loc|
         adj = loc.adjacent_locations
-        nearby = adj & @universe.keys
-        keys_to_check << adj
+        neighbors = adj & @universe.keys
 
-        if @universe.has_key?(loc)
-          @new_universe << @universe[loc] if (2..3).include?(nearby.count)
+        if cell = @universe[loc]
+          # Add it's neighbors to be checked
+          @keys_to_check = @keys_to_check | adj
+
+          @new_universe.add_cell(cell) if (2..3).include?(neighbors.count)
         else
-          @new_universe << Cell.new(loc) if nearby.count == 3
+          @new_universe.add_cell(Cell.new(loc)) if neighbors.count == 3
         end
 
         @checked << loc
@@ -133,14 +136,14 @@ class GameOfLife
       print
       @universe.evolve
       break if @universe.empty?
-      sleep 0.5
+      sleep 0.05
     end
   end
 
   def print
+    STDOUT.print `clear`
     r = UniverseRenderer.new(@universe)
     r.render
-    puts "--" * r.width
   end
 end
 

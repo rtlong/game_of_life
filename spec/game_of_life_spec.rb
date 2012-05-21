@@ -122,6 +122,27 @@ describe "Game of Life" do
     g.min.should eq [-5, -9]
   end
 
+  it "should allow dead cells to spring to life" do
+    g = Universe.new
+    initial_cells = [[1,1],[1,2],[1,3]]
+    initial_cells.each do |coords|
+      g << Cell.new(Location.new(*coords))
+    end
+    g.evolve
+    dead_locations = [[1,1],[1,3]]
+    dead_locations.each do |coords|
+      g[Location.new(*coords)].should be_nil, "live cell [#{coords.join(',')}] should have died"
+    end
+    surviving_locations = [[1,2]]
+    surviving_locations.each do |coords|
+      g[Location.new(*coords)].should_not be_nil, "live cell [#{coords.join(',')}] should have survived"
+    end
+    new_cells = [[0,2],[2,2]]
+    new_cells.each do |coords|
+      g[Location.new(*coords)].should_not be_nil, "dead cell [#{coords.join(',')}] should have come alive"
+    end
+  end
+
   it "UniverseRenderer calculates its height/width" do
     g = Universe.new
     g << Cell.new(Location.new(-5, 4))
